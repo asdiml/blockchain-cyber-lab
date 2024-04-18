@@ -3,7 +3,6 @@ import sys
 import requests
 import json
 
-
 os.environ["NO_PROXY"] = "127.0.0.1"
 address = "http://127.0.0.1:5000"
 
