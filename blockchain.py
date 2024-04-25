@@ -27,6 +27,12 @@ class Blockchain:
         self.chain = []
         self.current_transactions = []
 
+        # Create first block
+        first_block = self.create_block(1, [], 0, "0")
+        while not self.check_proof(first_block):
+            first_block.proof += 1
+        self.chain.append(first_block)
+
     def create_block(self, index, transactions, proof, previous_hash):
         return Block(index, copy.copy(transactions), proof, previous_hash)
 
@@ -57,14 +63,27 @@ class Blockchain:
 
     def check_proof(self, block):
         # Check that the hash of the block ends in difficulty_number many zeros
-        return False
+        block_hash = self.hash_block(block)
+        for i in range(1, self.difficulty_number + 1):
+            if block_hash[-i] != '0':
+                return False
+        return True
 
     def mine(self):
         # Give yourself a reward at the beginning of the transactions
+        self.add_transaction("NULL", self.address, 10)
+
         # Find the right value for proof
+        guess = 0
+        while True:
+            block = self.create_block(self.next_index(), self.current_transactions, guess, self.hash_block(self.current_block()))
+            if(self.check_proof(block)):
+                self.add_block(block)
+                break
+            guess+=1
         # Add the block to the chain
         # Clear your current transactions
-        pass
+        self.current_transactions = []
 
     def validate_chain(self, chain):
         # Check that the chain is valid

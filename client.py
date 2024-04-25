@@ -3,7 +3,6 @@ import sys
 import requests
 import json
 
-
 os.environ["NO_PROXY"] = "127.0.0.1"
 # Change the following number to the port of the blockchain you want to interact with
 port_num = "5000"
