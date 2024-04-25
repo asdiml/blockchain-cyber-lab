@@ -6,13 +6,6 @@ import argparse
 
 app = Flask(__name__)
 
-# Give yourself an address
-address = "TS"
-difficulty_number = 2
-mining_reward = 10
-local_blockchain = Blockchain(address, difficulty_number, mining_reward)
-
-
 @app.route("/chain", methods=["GET", "POST"])
 def chain():
     if request.method == "GET":
@@ -24,7 +17,7 @@ def chain():
     else:
         new_chain = request.get_json()
         replaced = local_blockchain.receive_chain(new_chain)
-        if replaced:
+        if replaced: 
             response = {
                 "message": "The chain was replaced",
                 "chain": local_blockchain.chain,
