@@ -82,37 +82,9 @@ class Blockchain:
         while True:
             block = self.create_block(self.next_index(), self.current_transactions, guess, self.hash_block(self.current_block()))
             if(self.check_proof(block)):
-                # Add the block to the chain
                 self.add_block(block)
                 break
             guess+=1
-        
+        # Add the block to the chain
         # Clear your current transactions
         self.current_transactions = []
-
-    def validate_chain(self, chain):
-        # Check that the chain is valid
-        # The chain is an array of blocks
-        # You should check that the hashes chain together
-        # The proofs of work should be valid
-
-        prev_hash = 0
-        for i in range(len(chain)):
-            if not self.check_proof(chain[i]):
-                print(i + " check_proof fail")
-                return False
-
-            if i > 0 and prev_hash != chain[i].previous_hash:
-                print(i + " prev_hash fail")
-                return False
-
-            prev_hash = self.hash_block(chain[i])
-        
-        return True
-
-    def receive_chain(self, chain_raw_json):
-        chain = [from_dict(Block, b) for b in chain_raw_json]
-        if self.validate_chain(chain) and len(chain) > self.get_length():
-            self.chain = chain
-            return True
-        return False
