@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from blockchain import Blockchain
+from signer import Signer
 import dataclasses
 import requests
 import argparse
@@ -79,7 +80,7 @@ def network():
         response = {"message": f"Added player address {value['address']}"}
         return jsonify(response), 200
 
-
+# Add public key to broadcast
 @app.route("/broadcast", methods=["GET"])
 def broadcast():
     successful_broadcasts = []
@@ -107,6 +108,7 @@ if __name__ == "__main__":
     port_num = args.port
     difficulty_number = 2
     mining_reward = 10
-    local_blockchain = Blockchain(identifier, difficulty_number, mining_reward)
+    local_signer = Signer()
+    local_blockchain = Blockchain(identifier, difficulty_number, mining_reward, local_signer)
 
     app.run(port=port_num)

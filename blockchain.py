@@ -10,20 +10,26 @@ class Transaction:
     recipient: str
     amount: float
 
+@dataclass
+class SignedTransaction:
+    transaction: Transaction
+    signature: bytearray
 
 @dataclass
 class Block:
     index: int
-    transactions: list[Transaction]
+    transactions: list[SignedTransaction]
     proof: int
     previous_hash: str
 
 
 class Blockchain:
-    def __init__(self, address, difficulty_number, mining_reward):
+    def __init__(self, address, difficulty_number, mining_reward, signer):
         self.address = address
         self.difficulty_number = difficulty_number
         self.mining_reward = mining_reward
+        self.signer = signer
+
         self.chain = []
         self.current_transactions = []
         self.players = set()
@@ -46,10 +52,18 @@ class Blockchain:
     def current_block(self):
         return self.chain[-1]
 
-    def add_transaction(self, sender, recipient, amount):
-        self.current_transactions.append(Transaction(sender, recipient, amount))
     
-    def add_player(self, address):
+    def add_transaction(self, recipient, amount, mining=False):
+
+        # If it is a self-reward for mining, set the sender to None
+        if mining is True: 
+            transaction = Transaction(None, recipient, amount)
+        else: transaction = Transaction(self.address, recipient, amount)
+
+        signature = self.signer.generateSignature()
+        self.current_transactions.append(SignedTransaction(transaction, signature))
+    
+    def add_player(self, address): 
         self.players.add(address)
 
     def next_index(self):
@@ -75,7 +89,7 @@ class Blockchain:
 
     def mine(self):
         # Give yourself a reward at the beginning of the transactions
-        self.add_transaction("NULL", self.address, 10)
+        self.add_transaction(self.address, 10, True)
 
         # Find the right value for proof
         guess = 0
@@ -85,6 +99,35 @@ class Blockchain:
                 self.add_block(block)
                 break
             guess+=1
+        
         # Add the block to the chain
         # Clear your current transactions
         self.current_transactions = []
+
+    # TODO: Add signature checking to validate_chain to check the transaction of each block
+    def validate_chain(self, chain):
+        # Check that the chain is valid
+        # The chain is an array of blocks
+        # You should check that the hashes chain together
+        # The proofs of work should be valid
+
+        prev_hash = 0
+        for i in range(len(chain)):
+            if not self.check_proof(chain[i]):
+                print(i + " check_proof fail")
+                return False
+
+            if i > 0 and prev_hash != chain[i].previous_hash:
+                print(i + " prev_hash fail")
+                return False
+
+            prev_hash = self.hash_block(chain[i])
+
+        return True
+
+    def receive_chain(self, chain_raw_json):
+        chain = [from_dict(Block, b) for b in chain_raw_json]
+        if self.validate_chain(chain) and len(chain) > self.get_length():
+            self.chain = chain
+            return True
+        return False
