@@ -1,21 +1,21 @@
 import hashlib
-import time
-from dataclasses import dataclass
+import dataclasses
 import copy
+import json
 from dacite import from_dict
 
-@dataclass
+@dataclasses.dataclass
 class Transaction:
     sender: str
     recipient: str
     amount: float
 
-@dataclass
+@dataclasses.dataclass
 class SignedTransaction:
     transaction: Transaction
-    signature: bytearray
+    signature: str
 
-@dataclass
+@dataclasses.dataclass
 class Block:
     index: int
     transactions: list[SignedTransaction]
@@ -60,8 +60,11 @@ class Blockchain:
             transaction = Transaction(None, recipient, amount)
         else: transaction = Transaction(self.address, recipient, amount)
 
-        signature = self.signer.generateSignature()
+        transaction_bytes = json.dumps(dataclasses.asdict(transaction)).encode('utf-8')
+
+        signature = str(self.signer.generate_signature(transaction_bytes))
         self.current_transactions.append(SignedTransaction(transaction, signature))
+    
     
     def add_player(self, address): 
         self.players.add(address)
@@ -88,8 +91,10 @@ class Blockchain:
         return True
 
     def mine(self):
+        # TODO: Don't mine if there have been no transactions to be mined
+
         # Give yourself a reward at the beginning of the transactions
-        self.add_transaction(self.address, 10, True)
+        self.add_transaction(self.address, 10, mining=True)
 
         # Find the right value for proof
         guess = 0

@@ -44,19 +44,18 @@ def mine():
         ],
         "proof": local_blockchain.current_block().proof,
     }
-
     return jsonify(response), 200
 
 
 @app.route("/transactions/new", methods=["POST"])
 def new_transaction():
     values = request.get_json()
-    required = ["sender", "recipient", "amount"]
+    required = ["recipient", "amount"]
     if not values or not all(k in values for k in required):
         return "Missing values", 400
 
     local_blockchain.add_transaction(
-        values["sender"], values["recipient"], values["amount"]
+        values["recipient"], values["amount"]
     )
 
     response = {
@@ -88,13 +87,20 @@ def broadcast():
         try:
             r = requests.post(
                 a + "/chain",
-                json=[dataclasses.asdict(block) for block in local_blockchain.chain],
+                json={
+                    'pubkey': local_signer.get_pubkey(),
+                    'blockchain': [dataclasses.asdict(block) for block in local_blockchain.chain]
+                },
             )
             successful_broadcasts.append(a)
         except Exception as e:
             print("Failed to send to ", a)
             print(e)
     response = {"message": "Chain broadcasted", "recipients": successful_broadcasts}
+    print({
+                    'pubkey': local_signer.pubkey_pem,
+                    'blockchain': [dataclasses.asdict(block) for block in local_blockchain.chain]
+                })
     return jsonify(response), 200
 
 

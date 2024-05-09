@@ -31,18 +31,17 @@ if __name__ == "__main__":
             print()
             print(r.status_code)
         elif choice == "t":
-            sender = input("Input the sender: ")
             recipient = input("Input the recipient: ")
             amount = input("Input an amount: ")
             try:
                 amount = float(amount)
-                payload = {"sender": sender, "recipient": recipient, "amount": amount}
+                payload = {"recipient": recipient, "amount": amount}
                 r = requests.post(address + "/transactions/new", json=payload)
                 json.dump(r.json(), sys.stdout, indent=2)
                 print()
                 print(r.status_code)
-            except:
-                print("Invalid amount. Please input a float.")
+            except Exception as e: 
+                print(e)
         elif choice == "a":
             r = requests.get(address + "/network")
             json.dump(r.json(), sys.stdout, indent=2)
