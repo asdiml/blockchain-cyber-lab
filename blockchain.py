@@ -125,7 +125,7 @@ class Blockchain:
             if i > 0 and prev_hash != chain[i].previous_hash:
                 print(i + " prev_hash fail")
                 return False
-
+            
             prev_hash = self.hash_block(chain[i])
 
         return True

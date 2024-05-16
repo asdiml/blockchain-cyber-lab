@@ -3,12 +3,35 @@ import sys
 import requests
 import json
 
+from signer import Signer
+
 os.environ["NO_PROXY"] = "127.0.0.1"
 # Change the following number to the port of the blockchain you want to interact with
 port_num = "5000"
 address = "http://127.0.0.1:" + port_num
 
 if __name__ == "__main__":
+
+    '''
+    if credentials not found 
+    generate signer obect 
+    use object to get private public keys 
+    store it somewhere persistently 
+    reaccess 
+    '''
+    
+    with open('keys.txt', 'r+') as file:
+        # Read the content
+        content = file.read()
+        # Perform checks
+        # For example, count the number of lines in the file
+        num_lines = content.count('\n') + 1
+        if(num_lines != 2): 
+            signatures = Signer()
+            
+            file.write
+
+
     print("Input b to see the blockchain on the server.")
     print("Input m to make the server mine a block.")
     print("Input t to add a transaction to the server.")
@@ -31,11 +54,13 @@ if __name__ == "__main__":
             print()
             print(r.status_code)
         elif choice == "t":
+            sender = input("Input the sender: s")
             recipient = input("Input the recipient: ")
             amount = input("Input an amount: ")
+            signature = input("Input ")
             try:
                 amount = float(amount)
-                payload = {"recipient": recipient, "amount": amount}
+                payload = {"sender": address, "recipient": recipient, "amount": amount}
                 r = requests.post(address + "/transactions/new", json=payload)
                 json.dump(r.json(), sys.stdout, indent=2)
                 print()
