@@ -3,6 +3,7 @@ from blockchain import Blockchain
 from signer import Signer
 import dataclasses
 import requests
+import base64
 import argparse
 
 app = Flask(__name__)
@@ -50,9 +51,16 @@ def mine():
 @app.route("/transactions/new", methods=["POST"])
 def new_transaction():
     values = request.get_json()
-    required = ["recipient", "amount"]
-    if not values or not all(k in values for k in required):
-        return "Missing values", 400
+    transaction = values.transaction
+    signature_bytes = base64.b64decode(values.signature)
+
+    # Ensure fields are present in transaction
+    required = ["sender", "recipient", "amount"]
+    if not transaction or not all(k in transaction for k in required):
+        return "Missing values in transaction", 400
+    
+    # Check signature
+    # TODO
 
     local_blockchain.add_transaction(
         values["recipient"], values["amount"]
@@ -66,22 +74,24 @@ def new_transaction():
 
 @app.route("/network", methods=["GET", "POST"])
 def network():
+    # grabbing addresses
     if request.method == "GET":
         response = {"nodes": list(local_blockchain.players)}
         return jsonify(response), 200
+    # post
     else:
         value = request.get_json()
         if not value or not ("address" in value):
             return "Missing values", 400
 
-        local_blockchain.add_player(value["address"])
+        local_blockchain.add_player(value["address"], value["pubkey"])
 
-        response = {"message": f"Added player address {value['address']}"}
+        response = {"message": f"Added player address {value['address']} and public key successfully"}
         return jsonify(response), 200
 
 # Add public key to broadcast
 @app.route("/broadcast", methods=["GET"])
-def broadcast():
+def broadcast(): 
     successful_broadcasts = []
     for a in local_blockchain.players:
         try:
@@ -114,7 +124,7 @@ if __name__ == "__main__":
     port_num = args.port
     difficulty_number = 2
     mining_reward = 10
-    local_signer = Signer()
+    local_signer = Signer(identifier)
     local_blockchain = Blockchain(identifier, difficulty_number, mining_reward, local_signer)
 
     app.run(port=port_num)

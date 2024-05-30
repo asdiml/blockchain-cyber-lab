@@ -2,35 +2,29 @@ import os
 import sys
 import requests
 import json
+import dataclasses
 
 from signer import Signer
+
+@dataclasses.dataclass
+class Transaction:
+    sender: str
+    recipient: str
+    amount: float
+
+@dataclasses.dataclass
+class SignedTransaction:
+    transaction: str
+    signature: str
+
 
 os.environ["NO_PROXY"] = "127.0.0.1"
 # Change the following number to the port of the blockchain you want to interact with
 port_num = "5000"
 address = "http://127.0.0.1:" + port_num
+signer = Signer(address)
 
 if __name__ == "__main__":
-
-    '''
-    if credentials not found 
-    generate signer obect 
-    use object to get private public keys 
-    store it somewhere persistently 
-    reaccess 
-    '''
-    
-    with open('keys.txt', 'r+') as file:
-        # Read the content
-        content = file.read()
-        # Perform checks
-        # For example, count the number of lines in the file
-        num_lines = content.count('\n') + 1
-        if(num_lines != 2): 
-            signatures = Signer()
-            
-            file.write
-
 
     print("Input b to see the blockchain on the server.")
     print("Input m to make the server mine a block.")
@@ -54,13 +48,18 @@ if __name__ == "__main__":
             print()
             print(r.status_code)
         elif choice == "t":
-            sender = input("Input the sender: s")
+            sender = input("Input the sender: ")
             recipient = input("Input the recipient: ")
             amount = input("Input an amount: ")
-            signature = input("Input ")
-            try:
+            try: 
                 amount = float(amount)
-                payload = {"sender": address, "recipient": recipient, "amount": amount}
+                transaction = Transaction(sender, recipient, amount)
+                transaction_bytes = json.dumps(dataclasses.asdict(transaction)).encode('utf-8')
+
+                signature = signer.generate_signature(transaction_bytes).decode()
+                signed_transaction = SignedTransaction(transaction_bytes.decode(), signature)
+                payload = dataclasses.asdict(signed_transaction)
+
                 r = requests.post(address + "/transactions/new", json=payload)
                 json.dump(r.json(), sys.stdout, indent=2)
                 print()
@@ -74,7 +73,8 @@ if __name__ == "__main__":
             print(r.status_code)
         elif choice == "a+":
             new_address = input("Input the new address to add: ")
-            payload = {"address": new_address}
+            new_pubkey = input("Input the public key to add: ")
+            payload = {"address": new_address, "pubkey": new_pubkey}
             r = requests.post(address + "/network", json=payload)
             json.dump(r.json(), sys.stdout, indent=2)
             print()

@@ -29,6 +29,7 @@ class Blockchain:
         self.difficulty_number = difficulty_number
         self.mining_reward = mining_reward
         self.signer = signer
+        self.pubkeylist = {}
 
         self.chain = []
         self.current_transactions = []
@@ -66,8 +67,9 @@ class Blockchain:
         self.current_transactions.append(SignedTransaction(transaction, signature))
     
     
-    def add_player(self, address): 
+    def add_player(self, address, pubkey): 
         self.players.add(address)
+        self.pubkeylist[address] = pubkey
 
     def next_index(self):
         return len(self.chain) + 1

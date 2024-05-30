@@ -7,20 +7,24 @@ import base64
 import os
 
 class Signer:
+
     def __init__(self, identifier):
 
-        # If the pubkey and privkeys exist, load them and store as pubkey and privkey
-        if os.path.isfile('./pem/pubkey-'+identifier+'.pem') and os.path.isfile('./pem/privkey-'+identifier+'.pem'): 
+        self.identifier = ''.join(c for c in identifier if c not in '?!/;').replace("http:","").replace(":",".")
 
-            with open('./pem/privkey-'+identifier+'.pem', "rb") as key_file:
+        # If the pubkey and privkeys exist, load them and store as pubkey and privkey
+        if os.path.isfile('./pem/pubkey-'+self.identifier+'.pem') and os.path.isfile('./pem/privkey-'+self.identifier+'.pem'): 
+
+            with open('./pem/pubkey-'+self.identifier+'.pem', "rb") as key_file:
+                self.public_key = serialization.load_pem_public_key(key_file.read())
+
+            with open('./pem/privkey-'+self.identifier+'.pem', "rb") as key_file:
                 self.private_key = serialization.load_pem_private_key(
                     key_file.read(),
                     password=None,
                 )
-
-            with open()
-
-            return()
+            
+            return
 
         # Else create and store pubkey and privkey
         else: 
@@ -33,7 +37,7 @@ class Signer:
                 format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption()
             )
-            with open('./pem/pubkey-'+identifier+'.pem', 'wb') as pem_out:
+            with open('./pem/privkey-'+self.identifier+'.pem', 'wb') as pem_out:
                 pem_out.write(self.privkey_pem)
             
             self.public_key = self.private_key.public_key()
@@ -41,10 +45,13 @@ class Signer:
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             )
-            with open('./pem/privkey-'+identifier+'.pem', 'wb') as pem_out:
+            with open('./pem/pubkey-'+self.identifier+'.pem', 'wb') as pem_out:
                 pem_out.write(self.pubkey_pem)
+
+    def sign_transaction(self, transaction):
+        print(transaction.stringify())
     
-    # Accepts a bytearray and generates a base64 encoded signature
+    # Accepts a bytearray and generates a base64 encoded signature (bytes)
     def generate_signature(self, message_bytes):
         signature = self.private_key.sign(
             message_bytes,
@@ -54,7 +61,7 @@ class Signer:
             ), 
             hashes.SHA256()
         )
-        return base64.b64encode(signature), 'utf8'
+        return base64.b64encode(signature)
 
     def get_pubkey(self):
         return self.pubkey_pem
